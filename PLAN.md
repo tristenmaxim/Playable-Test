@@ -33,6 +33,7 @@
 - [x] Создать класс Game с Application
 - [x] Настроить canvas для адаптивности
 - [x] Создать базовую структуру классов (Background, Player)
+- [x] Создать config.js с настройками игры
 
 ### 1.3 Фон
 - [ ] Скопировать `asset_0015_background_1.png` в `assets/images/`
