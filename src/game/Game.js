@@ -17,6 +17,8 @@ export class Game {
   }
   
   init() {
+    console.log('Инициализация игры...');
+    
     // Инициализация PixiJS
     this.app = new PIXI.Application({
       width: CONFIG.GAME_WIDTH,
@@ -27,10 +29,15 @@ export class Game {
       antialias: true
     });
     
+    console.log('PixiJS Application создан');
+    
     // Добавляем canvas в DOM
     const container = document.getElementById('game-container');
     if (container) {
       container.appendChild(this.app.view);
+      console.log('Canvas добавлен в DOM');
+    } else {
+      console.error('Контейнер game-container не найден!');
     }
     
     // Создаем игровые объекты
@@ -46,6 +53,7 @@ export class Game {
     
     // Запускаем игровой цикл
     this.start();
+    console.log('Игра запущена');
   }
   
   handleJump() {
