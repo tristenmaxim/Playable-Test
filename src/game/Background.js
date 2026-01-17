@@ -89,13 +89,17 @@ export class Background {
 
     this.container.addChild(bgSprite);
 
+    // Для зеркальной секции элементы должны быть в том же диапазоне, что и фон
+    // Фон находится на offsetX + sectionWidth, элементы тоже должны быть там
+    const elementOffsetX = isMirrored ? offsetX + this.sectionWidth : offsetX;
+
     // Добавляем деревья на эту секцию
-    const treesAdded = this.addTreesToSection(offsetX, scale, isMirrored);
+    const treesAdded = this.addTreesToSection(elementOffsetX, scale, isMirrored);
 
     // Добавляем кусты и фонари на эту секцию
-    const bushesAdded = this.addBushesToSection(offsetX, scale, isMirrored);
+    const bushesAdded = this.addBushesToSection(elementOffsetX, scale, isMirrored);
 
-    console.log(`✅ Секция ${index} создана, offsetX: ${offsetX}, зеркальная: ${isMirrored}`);
+    console.log(`✅ Секция ${index} создана, offsetX: ${offsetX}, elementOffsetX: ${elementOffsetX}, зеркальная: ${isMirrored}`);
     console.log(`   Деревьев добавлено: ${treesAdded}, кустов и фонарей: ${bushesAdded}`);
   }
 
@@ -116,8 +120,8 @@ export class Background {
       if (mirrored) {
         // Зеркальная секция - отражаем дерево и позицию
         sprite.scale.set(-treeScale, treeScale);
-        // Отражаем позицию: если обычная позиция x, то зеркальная = sectionWidth - x
-        // Но нужно учесть, что offsetX уже равен sectionWidth для второй секции
+        // Отражаем позицию относительно начала секции (offsetX уже учитывает смещение)
+        // Если обычная позиция x от начала секции, то зеркальная = sectionWidth - x
         const mirroredX = this.sectionWidth - (x * bgScale);
         sprite.position.set(offsetX + mirroredX, groundY);
       } else {
