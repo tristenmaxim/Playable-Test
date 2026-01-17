@@ -105,6 +105,7 @@ export class Background {
 
     // Размещаем деревья
     const treePositions = [100, 300, 500, 700, 900, 1100, 1300, 1500];
+    let count = 0;
 
     treePositions.forEach((x, i) => {
       const texture = this.textures.trees[i % this.textures.trees.length];
@@ -114,9 +115,9 @@ export class Background {
 
       if (mirrored) {
         // Зеркальная секция - отражаем дерево и позицию
-        // При зеркальном отображении нужно отразить позицию относительно центра секции
         sprite.scale.set(-treeScale, treeScale);
         // Отражаем позицию: если обычная позиция x, то зеркальная = sectionWidth - x
+        // Но нужно учесть, что offsetX уже равен sectionWidth для второй секции
         const mirroredX = this.sectionWidth - (x * bgScale);
         sprite.position.set(offsetX + mirroredX, groundY);
       } else {
@@ -126,7 +127,10 @@ export class Background {
 
       sprite.anchor.set(0.5, 1);
       this.container.addChild(sprite);
+      count++;
     });
+    
+    return count;
   }
 
   addBushesToSection(offsetX, bgScale, mirrored = false) {
@@ -134,6 +138,8 @@ export class Background {
     const bushY = CONFIG.GAME_HEIGHT * 0.61;
     // Позиция Y для фонарей (на том же уровне что и деревья)
     const lampY = CONFIG.GAME_HEIGHT * 0.54;
+
+    let count = 0;
 
     // Размещаем кусты
     const bushPositions = [50, 200, 350, 500, 650, 800, 950, 1100, 1250, 1400];
@@ -156,6 +162,7 @@ export class Background {
 
       sprite.anchor.set(0.5, 1);
       this.container.addChild(sprite);
+      count++;
     });
 
     // Фонари между деревьями
@@ -177,7 +184,10 @@ export class Background {
 
       sprite.anchor.set(0.5, 1);
       this.container.addChild(sprite);
+      count++;
     });
+    
+    return count;
   }
 
   update(delta) {
