@@ -65,6 +65,9 @@ export class Player {
   }
   
   jump() {
+    // Проверяем, что спрайт создан
+    if (!this.sprite) return;
+    
     if (this.isOnGround) {
       this.velocityY = CONFIG.JUMP_POWER;
       this.isOnGround = false;
@@ -72,6 +75,9 @@ export class Player {
   }
   
   update(delta) {
+    // Проверяем, что спрайт создан
+    if (!this.sprite) return;
+    
     // Применяем гравитацию
     this.velocityY += CONFIG.GRAVITY * delta;
     
@@ -87,6 +93,7 @@ export class Player {
   }
   
   getBounds() {
+    if (!this.sprite) return null;
     return this.sprite.getBounds();
   }
 }
