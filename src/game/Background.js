@@ -42,11 +42,9 @@ export class Background {
         bg: bgTexture
       };
 
-      // Создаем фон (4 секции: оригинал - зеркально - оригинал - зеркально)
+      // Создаем фон (2 секции: оригинал - зеркально)
       this.createBackgroundSection(0); // оригинал
       this.createBackgroundSection(1); // зеркально
-      this.createBackgroundSection(2); // оригинал
-      this.createBackgroundSection(3); // зеркально
 
       this.isReady = true;
       console.log('✅ Фон готов');
@@ -62,8 +60,8 @@ export class Background {
     this.sectionWidth = this.textures.bg.width * scale;
 
     const offsetX = index * this.sectionWidth;
-    // Паттерн: 0-оригинал, 1-зеркально, 2-оригинал, 3-зеркально
-    const isMirrored = index === 1 || index === 3;
+    // Паттерн: 0-оригинал, 1-зеркально
+    const isMirrored = index === 1;
 
     // Создаем фон - чётные секции обычные, нечётные зеркальные
     const bgSprite = new PIXI.Sprite(this.textures.bg);
