@@ -32,30 +32,21 @@ export class Background {
     console.log('Загрузка всех текстур фона...');
 
     try {
-      // Загружаем все текстуры параллельно
-      const [bgTexture, tree1, tree2, bush1, bush2, bush3, streetlamp] = await Promise.all([
-        PIXI.Assets.load('assets/images/background.png'),
-        PIXI.Assets.load('assets/images/tree_1.png'),
-        PIXI.Assets.load('assets/images/tree_2.png'),
-        PIXI.Assets.load('assets/images/bush_1.png'),
-        PIXI.Assets.load('assets/images/bush_2.png'),
-        PIXI.Assets.load('assets/images/bush_3.png'),
-        PIXI.Assets.load('assets/images/streetlamp.png')
-      ]);
+      // Загружаем только текстуру фона
+      const bgTexture = await PIXI.Assets.load('assets/images/background.png');
 
-      console.log('✅ Все текстуры загружены');
+      console.log('✅ Текстура фона загружена');
 
-      // Сохраняем текстуры для использования
+      // Сохраняем текстуру для использования
       this.textures = {
-        bg: bgTexture,
-        trees: [tree1, tree2],
-        bushes: [bush1, bush2, bush3],
-        streetlamp
+        bg: bgTexture
       };
 
-      // Создаем фон (две секции для бесшовного скролла)
-      this.createBackgroundSection(0);
-      this.createBackgroundSection(1);
+      // Создаем фон (4 секции: оригинал - зеркально - зеркально - оригинал)
+      this.createBackgroundSection(0); // оригинал
+      this.createBackgroundSection(1); // зеркально
+      this.createBackgroundSection(2); // зеркально
+      this.createBackgroundSection(3); // оригинал
 
       this.isReady = true;
       console.log('✅ Фон готов');
@@ -71,7 +62,8 @@ export class Background {
     this.sectionWidth = this.textures.bg.width * scale;
 
     const offsetX = index * this.sectionWidth;
-    const isMirrored = index % 2 === 1;
+    // Паттерн: 0-оригинал, 1-зеркально, 2-зеркально, 3-оригинал
+    const isMirrored = index === 1 || index === 2;
 
     // Создаем фон - чётные секции обычные, нечётные зеркальные
     const bgSprite = new PIXI.Sprite(this.textures.bg);
@@ -202,6 +194,7 @@ export class Background {
     this.container.position.x -= this.speed * delta;
 
     // Когда первая секция полностью ушла влево, сбрасываем позицию
+    // У нас 4 секции, поэтому сбрасываем когда ушла одна секция
     if (this.container.position.x <= -this.sectionWidth) {
       this.container.position.x += this.sectionWidth;
     }
