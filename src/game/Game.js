@@ -13,7 +13,10 @@ export class Game {
     this.isRunning = false;
     this.score = 0;
     
-    this.init();
+    // init теперь асинхронный
+    this.init().catch(error => {
+      console.error('Критическая ошибка инициализации:', error);
+    });
   }
   
   init() {

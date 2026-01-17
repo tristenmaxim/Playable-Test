@@ -52,10 +52,12 @@
       console.log('✅ PixiJS загружен, версия:', PIXI.VERSION);
       
       // Загружаем модули после проверки PixiJS
-      import('./src/game/Game.js').then(({ Game }) => {
+      import('./src/game/Game.js').then(async ({ Game }) => {
         console.log('✅ Модуль Game загружен');
         try {
           window.game = new Game();
+          // Даем время на асинхронную инициализацию
+          await new Promise(resolve => setTimeout(resolve, 100));
           console.log('✅ Игра создана успешно');
         } catch (error) {
           console.error('❌ Ошибка при создании игры:', error);
