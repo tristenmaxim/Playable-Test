@@ -155,19 +155,37 @@ export class Background {
     
     console.log('Масштаб:', scaleX, 'x', scaleY);
     
+    // Проверяем текстуру перед созданием спрайта
+    console.log('Проверка текстуры перед созданием спрайта:');
+    console.log('texture.valid:', texture.valid);
+    console.log('texture.width:', texture.width);
+    console.log('texture.height:', texture.height);
+    console.log('texture.baseTexture:', texture.baseTexture);
+    console.log('texture.baseTexture.valid:', texture.baseTexture?.valid);
+    console.log('texture.source:', texture.source);
+    
     // Создаем новые слои с текстурой
     const bg1 = new PIXI.Sprite(texture);
     bg1.scale.set(scaleX, scaleY);
     bg1.x = 0;
     bg1.y = 0;
+    bg1.visible = true;
+    bg1.alpha = 1;
     
     console.log('bg1 создан, размер после масштабирования:', bg1.width, 'x', bg1.height);
     console.log('bg1 позиция:', bg1.x, bg1.y);
+    console.log('bg1 текстура:', bg1.texture);
+    console.log('bg1 текстура валидна:', bg1.texture?.valid);
     
     const bg2 = new PIXI.Sprite(texture);
     bg2.scale.set(scaleX, scaleY);
     bg2.x = bg1.width; // Размещаем второй фон сразу после первого
     bg2.y = 0;
+    bg2.visible = true;
+    bg2.alpha = 1;
+    
+    console.log('bg2 создан, позиция:', bg2.x, bg2.y);
+    console.log('bg2 текстура валидна:', bg2.texture?.valid);
     
     console.log('bg2 создан, позиция:', bg2.x, bg2.y);
     console.log('Количество детей на сцене до добавления:', this.app.stage.children.length);
