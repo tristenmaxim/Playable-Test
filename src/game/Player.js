@@ -17,20 +17,11 @@ export class Player {
   }
   
   async init() {
-    // Создаем placeholder спрайт (прямоугольник)
-    // Позже заменим на реальную текстуру
-    this.sprite = new PIXI.Graphics();
-    this.sprite.beginFill(0x00ff00);
-    this.sprite.drawRect(0, 0, 50, 80);
-    this.sprite.endFill();
+    // Позиция игрока (будет установлена после загрузки текстуры)
+    this.initialX = 100;
+    this.initialY = CONFIG.GROUND_Y;
     
-    // Позиция игрока
-    this.sprite.x = 100;
-    this.sprite.y = CONFIG.GROUND_Y;
-    
-    this.app.stage.addChild(this.sprite);
-    
-    // Загружаем текстуру героя
+    // Загружаем текстуру героя сразу
     await this.loadTexture();
   }
   
@@ -48,11 +39,8 @@ export class Player {
    * Устанавливает текстуру игрока
    */
   setTexture(texture) {
-    const oldX = this.sprite.x;
-    const oldY = this.sprite.y;
-    
-    // Удаляем старый спрайт
-    if (this.sprite.parent) {
+    // Удаляем старый спрайт, если есть
+    if (this.sprite && this.sprite.parent) {
       this.sprite.parent.removeChild(this.sprite);
     }
     
@@ -65,14 +53,15 @@ export class Player {
     this.sprite.scale.set(scale, scale);
     
     // Позиция и якорь
-    this.sprite.x = oldX;
-    this.sprite.y = oldY;
+    this.sprite.x = this.initialX || 100;
+    this.sprite.y = this.initialY || CONFIG.GROUND_Y;
     this.sprite.anchor.set(0.5, 1); // Якорь снизу по центру
     
     // Добавляем на сцену поверх фона (но перед UI элементами)
     this.app.stage.addChild(this.sprite);
     
     console.log('✅ Спрайт героя создан, размер:', this.sprite.width, 'x', this.sprite.height);
+    console.log('Позиция героя:', this.sprite.x, this.sprite.y);
   }
   
   jump() {

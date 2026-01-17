@@ -12,7 +12,7 @@ export const CONFIG = {
   // Физика игрока
   GRAVITY: 0.8,
   JUMP_POWER: -15,
-  GROUND_Y: 500, // Y координата земли
+  GROUND_Y: 450, // Y координата земли (поднято выше)
   
   // Игровые параметры
   ENEMY_SPAWN_INTERVAL: 2000, // миллисекунды
