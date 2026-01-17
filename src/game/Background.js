@@ -71,30 +71,32 @@ export class Background {
     this.sectionWidth = this.textures.bg.width * scale;
 
     const offsetX = index * this.sectionWidth;
+    const isMirrored = index % 2 === 1;
 
     // Создаем фон - чётные секции обычные, нечётные зеркальные
     const bgSprite = new PIXI.Sprite(this.textures.bg);
 
-    if (index % 2 === 0) {
-      // Обычный фон
-      bgSprite.scale.set(scale, scale);
-      bgSprite.position.set(offsetX, 0);
-    } else {
+    if (isMirrored) {
       // Зеркальный фон (отражение по X)
       bgSprite.scale.set(-scale, scale);
       // При отрицательном scale.x нужно сместить позицию на ширину спрайта
       bgSprite.position.set(offsetX + this.sectionWidth, 0);
+    } else {
+      // Обычный фон
+      bgSprite.scale.set(scale, scale);
+      bgSprite.position.set(offsetX, 0);
     }
 
     this.container.addChild(bgSprite);
 
     // Добавляем деревья на эту секцию
-    this.addTreesToSection(offsetX, scale, index % 2 === 1);
+    const treesAdded = this.addTreesToSection(offsetX, scale, isMirrored);
 
     // Добавляем кусты и фонари на эту секцию
-    this.addBushesToSection(offsetX, scale, index % 2 === 1);
+    const bushesAdded = this.addBushesToSection(offsetX, scale, isMirrored);
 
-    console.log(`✅ Секция ${index} создана, offsetX: ${offsetX}, зеркальная: ${index % 2 === 1}`);
+    console.log(`✅ Секция ${index} создана, offsetX: ${offsetX}, зеркальная: ${isMirrored}`);
+    console.log(`   Деревьев добавлено: ${treesAdded}, кустов и фонарей: ${bushesAdded}`);
   }
 
   addTreesToSection(offsetX, bgScale, mirrored = false) {
