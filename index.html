@@ -42,12 +42,29 @@
   <script src="https://pixijs.download/release/pixi.min.js"></script>
   
   <!-- Игровой код (будет заменен на модули при сборке) -->
-  <script type="module">
-    import { Game } from './src/game/Game.js';
-    
-    // Запускаем игру после загрузки
-    window.addEventListener('DOMContentLoaded', () => {
-      window.game = new Game();
+  <script>
+    // Проверяем, что PixiJS загружен перед модулями
+    window.addEventListener('load', () => {
+      if (typeof PIXI === 'undefined') {
+        console.error('❌ PIXI не загружен! Проверьте подключение PixiJS.');
+        return;
+      }
+      console.log('✅ PixiJS загружен, версия:', PIXI.VERSION);
+      
+      // Загружаем модули после проверки PixiJS
+      import('./src/game/Game.js').then(({ Game }) => {
+        console.log('✅ Модуль Game загружен');
+        try {
+          window.game = new Game();
+          console.log('✅ Игра создана успешно');
+        } catch (error) {
+          console.error('❌ Ошибка при создании игры:', error);
+          console.error(error.stack);
+        }
+      }).catch((error) => {
+        console.error('❌ Ошибка загрузки модуля Game:', error);
+        console.error('Убедитесь, что используете локальный сервер (не file://)');
+      });
     });
   </script>
 </body>
