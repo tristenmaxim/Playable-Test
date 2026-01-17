@@ -10,10 +10,13 @@ export class Player {
     this.velocityY = 0;
     this.isOnGround = true;
     
-    this.init();
+    // init теперь асинхронный
+    this.init().catch(error => {
+      console.error('Ошибка инициализации игрока:', error);
+    });
   }
   
-  init() {
+  async init() {
     // Создаем placeholder спрайт (прямоугольник)
     // Позже заменим на реальную текстуру
     this.sprite = new PIXI.Graphics();
@@ -26,6 +29,19 @@ export class Player {
     this.sprite.y = CONFIG.GROUND_Y;
     
     this.app.stage.addChild(this.sprite);
+    
+    // Загружаем текстуру героя
+    await this.loadTexture();
+  }
+  
+  async loadTexture() {
+    try {
+      const texture = await PIXI.Assets.load('assets/images/hero.png');
+      console.log('✅ Текстура героя загружена, размер:', texture.width, 'x', texture.height);
+      this.setTexture(texture);
+    } catch (error) {
+      console.error('❌ Ошибка загрузки текстуры героя:', error);
+    }
   }
   
   /**
@@ -42,11 +58,21 @@ export class Player {
     
     // Создаем новый спрайт с текстурой
     this.sprite = new PIXI.Sprite(texture);
+    
+    // Настраиваем размер (примерно 80 пикселей в высоту)
+    const targetHeight = 80;
+    const scale = targetHeight / texture.height;
+    this.sprite.scale.set(scale, scale);
+    
+    // Позиция и якорь
     this.sprite.x = oldX;
     this.sprite.y = oldY;
     this.sprite.anchor.set(0.5, 1); // Якорь снизу по центру
     
+    // Добавляем на сцену поверх фона (но перед UI элементами)
     this.app.stage.addChild(this.sprite);
+    
+    console.log('✅ Спрайт героя создан, размер:', this.sprite.width, 'x', this.sprite.height);
   }
   
   jump() {
