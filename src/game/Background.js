@@ -160,19 +160,10 @@ export class Background {
     
     console.log('bg2 создан, позиция:', bg2.x, bg2.y);
     console.log('bg2 текстура валидна:', bg2.texture?.valid);
-    
-    console.log('bg2 создан, позиция:', bg2.x, bg2.y);
     console.log('Количество детей на сцене до добавления:', this.app.stage.children.length);
     
-    // Удаляем все старые слои (placeholder)
-    this.layers.forEach(layer => {
-      if (layer.sprite && layer.sprite.parent) {
-        layer.sprite.parent.removeChild(layer.sprite);
-      }
-    });
-    
-    // УПРОЩЕННО: просто добавляем спрайты на сцену
-    // Так как Player временно отключен, можем просто добавить
+    // Старые слои уже удалены выше (строки 107-112)
+    // Просто добавляем новые спрайты на сцену
     this.app.stage.addChild(bg1);
     this.app.stage.addChild(bg2);
     
