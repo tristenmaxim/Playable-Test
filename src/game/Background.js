@@ -118,17 +118,20 @@ export class Background {
       if (mirrored) {
         // Зеркальная секция - отражаем дерево и позицию
         sprite.scale.set(-treeScale, treeScale);
-        // offsetX для зеркальной секции = offsetX + sectionWidth (где offsetX = sectionWidth для секции 1)
-        // Отражаем позицию: если обычная позиция x от начала секции, то зеркальная = sectionWidth - x
-        // Но offsetX уже смещен, поэтому: позиция = offsetX - (sectionWidth - x*bgScale) = offsetX - sectionWidth + x*bgScale
+        // offsetX для зеркальной секции = offsetX + sectionWidth
+        // Отражаем позицию: mirroredX = sectionWidth - (x * bgScale)
+        // Позиция должна быть: offsetX - mirroredX = offsetX - sectionWidth + x*bgScale
+        // Но так как offsetX = offsetX + sectionWidth, упрощаем: offsetX + x*bgScale - sectionWidth
         const mirroredX = this.sectionWidth - (x * bgScale);
+        // Используем формулу: offsetX - sectionWidth + mirroredX = offsetX - sectionWidth + sectionWidth - x*bgScale = offsetX - x*bgScale
+        // Нет, это неправильно. Попробуем: offsetX - mirroredX
         sprite.position.set(offsetX - mirroredX, groundY);
+        sprite.anchor.set(0.5, 1);
       } else {
         sprite.scale.set(treeScale, treeScale);
         sprite.position.set(offsetX + x * bgScale, groundY);
+        sprite.anchor.set(0.5, 1);
       }
-
-      sprite.anchor.set(0.5, 1);
       this.container.addChild(sprite);
       count++;
     });
