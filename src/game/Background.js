@@ -31,44 +31,60 @@ export class Background {
     const imagePath = 'assets/images/background.png';
     console.log('Загрузка текстуры фона из:', imagePath);
     
-    // УПРОЩЕННЫЙ ПОДХОД: используем Texture.from() напрямую
-    // Это должно работать в PixiJS v8
-    const texture = PIXI.Texture.from(imagePath);
-    
-    console.log('Texture создан:', texture);
-    console.log('texture.valid:', texture.valid);
-    console.log('texture.baseTexture:', texture.baseTexture);
-    console.log('texture.baseTexture.valid:', texture.baseTexture?.valid);
-    
-    // Ждем загрузки текстуры
-    if (texture.baseTexture?.valid) {
-      console.log('✅ Текстура уже загружена!');
-      this.setTexture(texture);
-    } else {
-      console.log('⏳ Ожидание загрузки текстуры...');
+    try {
+      // В PixiJS v8 используем Assets.load() - это правильный способ
+      console.log('Используем PIXI.Assets.load()...');
+      const texture = await PIXI.Assets.load(imagePath);
       
-      // В PixiJS v8 используем source вместо baseTexture
-      const source = texture.source || texture.baseTexture;
+      console.log('Загруженный ресурс:', texture);
+      console.log('Тип:', texture?.constructor?.name);
       
-      if (source) {
-        source.on('loaded', () => {
-          console.log('✅ Текстура загружена! Размер:', texture.width, 'x', texture.height);
-          this.setTexture(texture);
-        });
+      // Assets.load может вернуть Texture напрямую или ImageResource
+      let finalTexture;
+      
+      if (texture instanceof PIXI.Texture) {
+        finalTexture = texture;
+        console.log('✅ Получена Texture напрямую');
+      } else if (texture && typeof texture === 'object') {
+        // Может быть ImageResource или другой тип
+        console.log('Проверяем свойства объекта...');
+        console.log('texture.texture:', texture.texture);
+        console.log('texture.baseTexture:', texture.baseTexture);
+        console.log('texture.source:', texture.source);
         
-        source.on('error', (error) => {
-          console.error('❌ Ошибка загрузки текстуры:', error);
-        });
-        
-        // Также пробуем загрузить через ресурс
-        if (source.resource) {
-          source.resource.load().then(() => {
-            console.log('✅ Текстура загружена через resource.load()!');
-            this.setTexture(texture);
-          }).catch((err) => {
-            console.error('Ошибка resource.load():', err);
-          });
+        // Пробуем разные варианты
+        if (texture.texture) {
+          finalTexture = texture.texture;
+        } else if (texture.baseTexture) {
+          finalTexture = new PIXI.Texture(texture.baseTexture);
+        } else {
+          // Создаем текстуру из URL напрямую
+          console.log('Создаем текстуру через Texture.fromURL()...');
+          finalTexture = await PIXI.Texture.fromURL(imagePath);
         }
+      } else {
+        throw new Error('Неожиданный тип загруженного ресурса');
+      }
+      
+      if (finalTexture) {
+        console.log('✅ Финальная текстура получена!');
+        console.log('Размер:', finalTexture.width, 'x', finalTexture.height);
+        console.log('Валидна:', finalTexture.valid);
+        this.setTexture(finalTexture);
+      } else {
+        throw new Error('Не удалось получить текстуру из загруженного ресурса');
+      }
+    } catch (error) {
+      console.error('❌ Ошибка загрузки через Assets.load():', error);
+      console.log('Пробуем альтернативный способ...');
+      
+      // Альтернативный способ: Texture.fromURL()
+      try {
+        const texture = await PIXI.Texture.fromURL(imagePath);
+        console.log('✅ Текстура загружена через Texture.fromURL()!');
+        this.setTexture(texture);
+      } catch (fallbackError) {
+        console.error('❌ Ошибка загрузки через Texture.fromURL():', fallbackError);
       }
     }
   }
