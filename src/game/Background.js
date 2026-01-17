@@ -31,70 +31,44 @@ export class Background {
     const imagePath = 'assets/images/background.png';
     console.log('Загрузка текстуры фона из:', imagePath);
     
-    try {
-      // В PixiJS v8 используем Assets API для загрузки
-      const loadedAsset = await PIXI.Assets.load(imagePath);
-      console.log('Загруженный ассет:', loadedAsset);
-      console.log('Тип ассета:', loadedAsset?.constructor?.name);
+    // УПРОЩЕННЫЙ ПОДХОД: используем Texture.from() напрямую
+    // Это должно работать в PixiJS v8
+    const texture = PIXI.Texture.from(imagePath);
+    
+    console.log('Texture создан:', texture);
+    console.log('texture.valid:', texture.valid);
+    console.log('texture.baseTexture:', texture.baseTexture);
+    console.log('texture.baseTexture.valid:', texture.baseTexture?.valid);
+    
+    // Ждем загрузки текстуры
+    if (texture.baseTexture?.valid) {
+      console.log('✅ Текстура уже загружена!');
+      this.setTexture(texture);
+    } else {
+      console.log('⏳ Ожидание загрузки текстуры...');
       
-      // Assets.load может вернуть Texture или ImageResource
-      let texture;
-      if (loadedAsset instanceof PIXI.Texture) {
-        texture = loadedAsset;
-      } else if (loadedAsset?.texture) {
-        texture = loadedAsset.texture;
-      } else if (loadedAsset?.baseTexture) {
-        texture = new PIXI.Texture(loadedAsset.baseTexture);
-      } else {
-        // Пробуем создать текстуру из загруженного ресурса
-        texture = PIXI.Texture.from(imagePath);
-        console.log('Используем Texture.from() как fallback');
-      }
+      // В PixiJS v8 используем source вместо baseTexture
+      const source = texture.source || texture.baseTexture;
       
-      if (texture) {
-        console.log('✅ Текстура получена! Размер:', texture.width, 'x', texture.height);
-        console.log('Текстура валидна:', texture.valid);
-        console.log('BaseTexture валиден:', texture.baseTexture?.valid);
-        
-        // Ждем, пока текстура точно загрузится
-        if (!texture.baseTexture?.valid) {
-          console.log('Ожидание загрузки baseTexture...');
-          await new Promise((resolve) => {
-            texture.baseTexture.on('loaded', resolve);
-            texture.baseTexture.on('error', resolve);
-            // Таймаут на случай, если событие уже произошло
-            setTimeout(resolve, 100);
-          });
-        }
-        
-        this.setTexture(texture);
-      } else {
-        console.warn('⚠️ Не удалось получить текстуру из загруженного ассета');
-      }
-    } catch (error) {
-      console.error('❌ Ошибка загрузки текстуры фона:', error);
-      console.error('Путь:', imagePath);
-      console.warn('Пробуем Texture.from()...');
-      
-      // Fallback: используем Texture.from()
-      try {
-        const texture = PIXI.Texture.from(imagePath);
-        console.log('Texture.from() создан, валиден:', texture.baseTexture?.valid);
-        
-        if (texture.baseTexture?.valid) {
+      if (source) {
+        source.on('loaded', () => {
+          console.log('✅ Текстура загружена! Размер:', texture.width, 'x', texture.height);
           this.setTexture(texture);
-        } else {
-          texture.baseTexture.on('loaded', () => {
-            console.log('✅ Текстура загружена через Texture.from()!');
+        });
+        
+        source.on('error', (error) => {
+          console.error('❌ Ошибка загрузки текстуры:', error);
+        });
+        
+        // Также пробуем загрузить через ресурс
+        if (source.resource) {
+          source.resource.load().then(() => {
+            console.log('✅ Текстура загружена через resource.load()!');
             this.setTexture(texture);
-          });
-          
-          texture.baseTexture.on('error', (err) => {
-            console.error('Ошибка загрузки через Texture.from():', err);
+          }).catch((err) => {
+            console.error('Ошибка resource.load():', err);
           });
         }
-      } catch (fallbackError) {
-        console.error('Fallback тоже не сработал:', fallbackError);
       }
     }
   }
@@ -190,20 +164,17 @@ export class Background {
     console.log('bg2 создан, позиция:', bg2.x, bg2.y);
     console.log('Количество детей на сцене до добавления:', this.app.stage.children.length);
     
-    // НЕ очищаем всю сцену - там может быть Player!
-    // Удаляем только старые слои фона
+    // Удаляем все старые слои (placeholder)
     this.layers.forEach(layer => {
       if (layer.sprite && layer.sprite.parent) {
         layer.sprite.parent.removeChild(layer.sprite);
       }
     });
     
-    // Добавляем новые спрайты в начало (фон должен быть сзади)
-    this.app.stage.addChildAt(bg1, 0);
-    
-    // Находим индекс для второго спрайта (после первого, но перед Player)
-    const bg1Index = this.app.stage.getChildIndex(bg1);
-    this.app.stage.addChildAt(bg2, bg1Index + 1);
+    // УПРОЩЕННО: просто добавляем спрайты на сцену
+    // Так как Player временно отключен, можем просто добавить
+    this.app.stage.addChild(bg1);
+    this.app.stage.addChild(bg2);
     
     console.log('Спрайты добавлены на сцену');
     console.log('Количество детей на сцене после добавления:', this.app.stage.children.length);

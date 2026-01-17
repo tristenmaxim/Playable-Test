@@ -50,15 +50,16 @@ export class Game {
       }
       
       // Создаем игровые объекты
+      // ВРЕМЕННО: только фон для отладки
       this.background = new Background(this.app);
-      this.player = new Player(this.app);
+      // this.player = new Player(this.app); // Временно отключен
       
       // Обработка клика/тапа для прыжка
-      this.app.canvas.addEventListener('click', () => this.handleJump());
-      this.app.canvas.addEventListener('touchstart', (e) => {
-        e.preventDefault();
-        this.handleJump();
-      });
+      // this.app.canvas.addEventListener('click', () => this.handleJump()); // Временно отключен
+      // this.app.canvas.addEventListener('touchstart', (e) => {
+      //   e.preventDefault();
+      //   this.handleJump();
+      // });
       
       // Запускаем игровой цикл
       this.start();
@@ -92,10 +93,10 @@ export class Game {
       this.background.update(delta);
     }
     
-    // Обновляем игрока
-    if (this.player) {
-      this.player.update(delta);
-    }
+    // Обновляем игрока (временно отключен)
+    // if (this.player) {
+    //   this.player.update(delta);
+    // }
     
     // Увеличиваем счет
     this.score += CONFIG.SCORE_INCREMENT * (delta / 60);
