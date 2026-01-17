@@ -85,19 +85,22 @@ export class Game {
     this.app.ticker.remove(this.update, this);
   }
   
-  update(delta) {
+  update(ticker) {
     if (!this.isRunning) return;
-    
+
+    // В PixiJS v8 ticker передает объект Ticker, а не delta напрямую
+    const delta = ticker.deltaTime;
+
     // Обновляем фон
     if (this.background) {
       this.background.update(delta);
     }
-    
+
     // Обновляем игрока (временно отключен)
     // if (this.player) {
     //   this.player.update(delta);
     // }
-    
+
     // Увеличиваем счет
     this.score += CONFIG.SCORE_INCREMENT * (delta / 60);
   }

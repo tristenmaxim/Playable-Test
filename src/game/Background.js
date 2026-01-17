@@ -1,217 +1,192 @@
 import { CONFIG } from '../config.js';
 
 /**
- * Класс для управления фоном с параллакс-скроллом
+ * Класс для управления фоном со скроллом
  */
 export class Background {
   constructor(app) {
     this.app = app;
-    this.layers = [];
     this.speed = CONFIG.BACKGROUND_SCROLL_SPEED;
-    
+
+    // Один контейнер для всего фона (всё движется вместе)
+    this.container = new PIXI.Container();
+    this.app.stage.addChild(this.container);
+
+    // Ширина одного "экрана" фона для зацикливания
+    this.sectionWidth = 0;
+
+    // Флаг готовности
+    this.isReady = false;
+
     this.init();
   }
-  
+
   init() {
     console.log('Background.init() вызван');
-    
-    // Сразу пытаемся загрузить текстуру фона (асинхронно)
-    this.loadTexture().catch(error => {
-      console.error('Ошибка загрузки текстуры фона:', error);
+    this.loadAllTextures().catch(error => {
+      console.error('Ошибка загрузки текстур:', error);
     });
   }
-  
-  async loadTexture() {
-    console.log('Background.loadTexture() вызван');
-    
-    // Сначала создаем placeholder, чтобы что-то было видно
-    this.createPlaceholder();
-    
-    // Загружаем текстуру фона
-    const imagePath = 'assets/images/background.png';
-    console.log('Загрузка текстуры фона из:', imagePath);
-    
+
+  async loadAllTextures() {
+    console.log('Загрузка всех текстур фона...');
+
     try {
-      // В PixiJS v8 используем Assets.load() - это правильный способ
-      console.log('Используем PIXI.Assets.load()...');
-      const texture = await PIXI.Assets.load(imagePath);
-      
-      console.log('Загруженный ресурс:', texture);
-      console.log('Тип:', texture?.constructor?.name);
-      
-      // Assets.load может вернуть Texture напрямую или ImageResource
-      let finalTexture;
-      
-      if (texture instanceof PIXI.Texture) {
-        finalTexture = texture;
-        console.log('✅ Получена Texture напрямую');
-      } else if (texture && typeof texture === 'object') {
-        // Может быть ImageResource или другой тип
-        console.log('Проверяем свойства объекта...');
-        console.log('texture.texture:', texture.texture);
-        console.log('texture.baseTexture:', texture.baseTexture);
-        console.log('texture.source:', texture.source);
-        
-        // Пробуем разные варианты
-        if (texture.texture) {
-          finalTexture = texture.texture;
-        } else if (texture.baseTexture) {
-          finalTexture = new PIXI.Texture(texture.baseTexture);
-        } else {
-          // Создаем текстуру из URL напрямую
-          console.log('Создаем текстуру через Texture.fromURL()...');
-          finalTexture = await PIXI.Texture.fromURL(imagePath);
-        }
-      } else {
-        throw new Error('Неожиданный тип загруженного ресурса');
-      }
-      
-      if (finalTexture) {
-        console.log('✅ Финальная текстура получена!');
-        console.log('Размер:', finalTexture.width, 'x', finalTexture.height);
-        console.log('Валидна:', finalTexture.valid);
-        this.setTexture(finalTexture);
-      } else {
-        throw new Error('Не удалось получить текстуру из загруженного ресурса');
-      }
+      // Загружаем все текстуры параллельно
+      const [bgTexture, tree1, tree2, bush1, bush2, bush3, streetlamp] = await Promise.all([
+        PIXI.Assets.load('assets/images/background.png'),
+        PIXI.Assets.load('assets/images/tree_1.png'),
+        PIXI.Assets.load('assets/images/tree_2.png'),
+        PIXI.Assets.load('assets/images/bush_1.png'),
+        PIXI.Assets.load('assets/images/bush_2.png'),
+        PIXI.Assets.load('assets/images/bush_3.png'),
+        PIXI.Assets.load('assets/images/streetlamp.png')
+      ]);
+
+      console.log('✅ Все текстуры загружены');
+
+      // Сохраняем текстуры для использования
+      this.textures = {
+        bg: bgTexture,
+        trees: [tree1, tree2],
+        bushes: [bush1, bush2, bush3],
+        streetlamp
+      };
+
+      // Создаем фон (две секции для бесшовного скролла)
+      this.createBackgroundSection(0);
+      this.createBackgroundSection(1);
+
+      this.isReady = true;
+      console.log('✅ Фон готов');
+
     } catch (error) {
-      console.error('❌ Ошибка загрузки через Assets.load():', error);
-      console.log('Пробуем альтернативный способ...');
-      
-      // Альтернативный способ: Texture.fromURL()
-      try {
-        const texture = await PIXI.Texture.fromURL(imagePath);
-        console.log('✅ Текстура загружена через Texture.fromURL()!');
-        this.setTexture(texture);
-      } catch (fallbackError) {
-        console.error('❌ Ошибка загрузки через Texture.fromURL():', fallbackError);
-      }
+      console.error('❌ Ошибка загрузки текстур:', error);
     }
   }
-  
-  createPlaceholder() {
-    // Создаем placeholder для фона (пока без текстуры)
-    const bg1 = new PIXI.Graphics();
-    bg1.beginFill(0x2a2a3e);
-    bg1.drawRect(0, 0, CONFIG.GAME_WIDTH, CONFIG.GAME_HEIGHT);
-    bg1.endFill();
-    bg1.x = 0;
-    bg1.y = 0;
-    
-    const bg2 = new PIXI.Graphics();
-    bg2.beginFill(0x2a2a3e);
-    bg2.drawRect(0, 0, CONFIG.GAME_WIDTH, CONFIG.GAME_HEIGHT);
-    bg2.endFill();
-    bg2.x = CONFIG.GAME_WIDTH;
-    bg2.y = 0;
-    
-    this.app.stage.addChild(bg1);
-    this.app.stage.addChild(bg2);
-    
-    this.layers.push({ sprite: bg1, speed: this.speed });
-    this.layers.push({ sprite: bg2, speed: this.speed });
-  }
-  
-  /**
-   * Устанавливает текстуру фона
-   */
-  setTexture(texture) {
-    console.log('setTexture вызван, texture:', texture);
-    console.log('Размер текстуры:', texture.width, 'x', texture.height);
-    
-    // Удаляем старые слои (включая placeholder)
-    this.layers.forEach(layer => {
-      if (layer.sprite && layer.sprite.parent) {
-        console.log('Удаляем старый слой:', layer.sprite);
-        layer.sprite.parent.removeChild(layer.sprite);
-      }
-    });
-    this.layers = [];
-    
-    // Вычисляем масштаб для заполнения экрана с сохранением пропорций
-    const textureAspect = texture.width / texture.height;
-    const gameAspect = CONFIG.GAME_WIDTH / CONFIG.GAME_HEIGHT;
-    
-    let scaleX, scaleY;
-    if (textureAspect > gameAspect) {
-      // Текстура шире - масштабируем по высоте
-      scaleY = CONFIG.GAME_HEIGHT / texture.height;
-      scaleX = scaleY;
+
+  createBackgroundSection(index) {
+    // Масштаб для заполнения экрана по высоте
+    const scale = CONFIG.GAME_HEIGHT / this.textures.bg.height;
+    this.sectionWidth = this.textures.bg.width * scale;
+
+    const offsetX = index * this.sectionWidth;
+
+    // Создаем фон - чётные секции обычные, нечётные зеркальные
+    const bgSprite = new PIXI.Sprite(this.textures.bg);
+
+    if (index % 2 === 0) {
+      // Обычный фон
+      bgSprite.scale.set(scale, scale);
+      bgSprite.position.set(offsetX, 0);
     } else {
-      // Текстура выше - масштабируем по ширине
-      scaleX = CONFIG.GAME_WIDTH / texture.width;
-      scaleY = scaleX;
+      // Зеркальный фон (отражение по X)
+      bgSprite.scale.set(-scale, scale);
+      // При отрицательном scale.x нужно сместить позицию на ширину спрайта
+      bgSprite.position.set(offsetX + this.sectionWidth, 0);
     }
-    
-    console.log('Масштаб:', scaleX, 'x', scaleY);
-    
-    // Проверяем текстуру перед созданием спрайта
-    console.log('Проверка текстуры перед созданием спрайта:');
-    console.log('texture.valid:', texture.valid);
-    console.log('texture.width:', texture.width);
-    console.log('texture.height:', texture.height);
-    console.log('texture.baseTexture:', texture.baseTexture);
-    console.log('texture.baseTexture.valid:', texture.baseTexture?.valid);
-    console.log('texture.source:', texture.source);
-    
-    // Создаем новые слои с текстурой
-    const bg1 = new PIXI.Sprite(texture);
-    bg1.scale.set(scaleX, scaleY);
-    bg1.x = 0;
-    bg1.y = 0;
-    bg1.visible = true;
-    bg1.alpha = 1;
-    
-    console.log('bg1 создан, размер после масштабирования:', bg1.width, 'x', bg1.height);
-    console.log('bg1 позиция:', bg1.x, bg1.y);
-    console.log('bg1 текстура:', bg1.texture);
-    console.log('bg1 текстура валидна:', bg1.texture?.valid);
-    
-    const bg2 = new PIXI.Sprite(texture);
-    bg2.scale.set(scaleX, scaleY);
-    bg2.x = bg1.width; // Размещаем второй фон сразу после первого
-    bg2.y = 0;
-    bg2.visible = true;
-    bg2.alpha = 1;
-    
-    console.log('bg2 создан, позиция:', bg2.x, bg2.y);
-    console.log('bg2 текстура валидна:', bg2.texture?.valid);
-    console.log('Количество детей на сцене до добавления:', this.app.stage.children.length);
-    
-    // Старые слои уже удалены выше (строки 107-112)
-    // Просто добавляем новые спрайты на сцену
-    this.app.stage.addChild(bg1);
-    this.app.stage.addChild(bg2);
-    
-    console.log('Спрайты добавлены на сцену');
-    console.log('Количество детей на сцене после добавления:', this.app.stage.children.length);
-    console.log('bg1 видимый:', bg1.visible, 'alpha:', bg1.alpha, 'zIndex:', this.app.stage.getChildIndex(bg1));
-    console.log('bg2 видимый:', bg2.visible, 'alpha:', bg2.alpha, 'zIndex:', this.app.stage.getChildIndex(bg2));
-    console.log('Все дети на сцене:', this.app.stage.children.map(c => c.constructor.name));
-    
-    this.layers.push({ sprite: bg1, speed: this.speed });
-    this.layers.push({ sprite: bg2, speed: this.speed });
-    
-    // Принудительно обновляем рендер
-    this.app.render();
-    console.log('Рендер обновлен');
+
+    this.container.addChild(bgSprite);
+
+    // Добавляем деревья на эту секцию
+    this.addTreesToSection(offsetX, scale, index % 2 === 1);
+
+    // Добавляем кусты и фонари на эту секцию
+    this.addBushesToSection(offsetX, scale, index % 2 === 1);
+
+    console.log(`✅ Секция ${index} создана, offsetX: ${offsetX}, зеркальная: ${index % 2 === 1}`);
   }
-  
-  update(delta) {
-    this.layers.forEach(layer => {
-      layer.sprite.x -= layer.speed * delta;
-      
-      // Бесшовное зацикливание
-      // Когда первый фон уходит за левый край, перемещаем его вправо от второго
-      if (layer.sprite.x <= -layer.sprite.width) {
-        // Находим другой слой для правильного позиционирования
-        const otherLayer = this.layers.find(l => l !== layer);
-        if (otherLayer) {
-          layer.sprite.x = otherLayer.sprite.x + otherLayer.sprite.width;
-        } else {
-          layer.sprite.x = CONFIG.GAME_WIDTH;
-        }
+
+  addTreesToSection(offsetX, bgScale, mirrored = false) {
+    // Позиция Y для деревьев (на границе желтого поля и серой полосы)
+    const groundY = CONFIG.GAME_HEIGHT * 0.54;
+
+    // Размещаем деревья
+    const treePositions = [100, 300, 500, 700, 900, 1100, 1300, 1500];
+
+    treePositions.forEach((x, i) => {
+      const texture = this.textures.trees[i % this.textures.trees.length];
+      const sprite = new PIXI.Sprite(texture);
+
+      const treeScale = 0.65;
+
+      if (mirrored) {
+        // Зеркальная секция - отражаем дерево и позицию
+        // При зеркальном отображении нужно отразить позицию относительно центра секции
+        sprite.scale.set(-treeScale, treeScale);
+        // Отражаем позицию: если обычная позиция x, то зеркальная = sectionWidth - x
+        const mirroredX = this.sectionWidth - (x * bgScale);
+        sprite.position.set(offsetX + mirroredX, groundY);
+      } else {
+        sprite.scale.set(treeScale, treeScale);
+        sprite.position.set(offsetX + x * bgScale, groundY);
       }
+
+      sprite.anchor.set(0.5, 1);
+      this.container.addChild(sprite);
     });
+  }
+
+  addBushesToSection(offsetX, bgScale, mirrored = false) {
+    // Позиция Y для кустов (на серой полосе, над фиолетовой дорогой)
+    const bushY = CONFIG.GAME_HEIGHT * 0.61;
+    // Позиция Y для фонарей (на том же уровне что и деревья)
+    const lampY = CONFIG.GAME_HEIGHT * 0.54;
+
+    // Размещаем кусты
+    const bushPositions = [50, 200, 350, 500, 650, 800, 950, 1100, 1250, 1400];
+
+    bushPositions.forEach((x, i) => {
+      const texture = this.textures.bushes[i % this.textures.bushes.length];
+      const sprite = new PIXI.Sprite(texture);
+
+      const bushScale = 0.45;
+
+      if (mirrored) {
+        // Зеркальная секция - отражаем куст и позицию
+        sprite.scale.set(-bushScale, bushScale);
+        const mirroredX = this.sectionWidth - (x * bgScale);
+        sprite.position.set(offsetX + mirroredX, bushY);
+      } else {
+        sprite.scale.set(bushScale, bushScale);
+        sprite.position.set(offsetX + x * bgScale, bushY);
+      }
+
+      sprite.anchor.set(0.5, 1);
+      this.container.addChild(sprite);
+    });
+
+    // Фонари между деревьями
+    const lampPositions = [200, 600, 1000, 1400];
+
+    lampPositions.forEach((x) => {
+      const sprite = new PIXI.Sprite(this.textures.streetlamp);
+      const lampScale = 0.55;
+
+      if (mirrored) {
+        // Зеркальная секция - отражаем фонарь и позицию
+        sprite.scale.set(-lampScale, lampScale);
+        const mirroredX = this.sectionWidth - (x * bgScale);
+        sprite.position.set(offsetX + mirroredX, lampY);
+      } else {
+        sprite.scale.set(lampScale, lampScale);
+        sprite.position.set(offsetX + x * bgScale, lampY);
+      }
+
+      sprite.anchor.set(0.5, 1);
+      this.container.addChild(sprite);
+    });
+  }
+
+  update(delta) {
+    if (!this.isReady) return;
+
+    // Двигаем весь контейнер
+    this.container.position.x -= this.speed * delta;
+
+    // Когда первая секция полностью ушла влево, сбрасываем позицию
+    if (this.container.position.x <= -this.sectionWidth) {
+      this.container.position.x += this.sectionWidth;
+    }
   }
 }
