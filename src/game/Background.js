@@ -131,7 +131,7 @@ export class Background {
     // Фонари - средний план, на той же высоте что и деревья
     const lampY = CONFIG.GAME_HEIGHT * 0.54;
     const lampPositions = [200, 600, 1000, 1400];
-    const lampScale = 0.55 * 1.5; // Увеличиваем в полтора раза
+    const lampScale = 0.55 * 1.5 * 0.75; // Увеличиваем в полтора раза, затем уменьшаем до 75%
 
     lampPositions.forEach((x) => {
       const sprite = new PIXI.Sprite(this.textures.streetlamp);
