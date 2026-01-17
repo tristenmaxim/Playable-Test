@@ -19,44 +19,50 @@ export class Game {
     });
   }
   
-  init() {
+  async init() {
     console.log('Инициализация игры...');
     
-    // Инициализация PixiJS
-    this.app = new PIXI.Application({
-      width: CONFIG.GAME_WIDTH,
-      height: CONFIG.GAME_HEIGHT,
-      backgroundColor: 0x1a1a2e,
-      resolution: window.devicePixelRatio || 1,
-      autoDensity: true,
-      antialias: true
-    });
-    
-    console.log('PixiJS Application создан');
-    
-    // Добавляем canvas в DOM
-    const container = document.getElementById('game-container');
-    if (container) {
-      container.appendChild(this.app.view);
-      console.log('Canvas добавлен в DOM');
-    } else {
-      console.error('Контейнер game-container не найден!');
+    try {
+      // Инициализация PixiJS (в v8 это асинхронная операция)
+      this.app = await PIXI.Application.create({
+        width: CONFIG.GAME_WIDTH,
+        height: CONFIG.GAME_HEIGHT,
+        backgroundColor: 0x1a1a2e,
+        resolution: window.devicePixelRatio || 1,
+        autoDensity: true,
+        antialias: true
+      });
+      
+      console.log('PixiJS Application создан');
+      
+      // Добавляем canvas в DOM
+      const container = document.getElementById('game-container');
+      if (container) {
+        // В PixiJS v8 используется app.canvas вместо app.view
+        container.appendChild(this.app.canvas);
+        console.log('Canvas добавлен в DOM');
+      } else {
+        console.error('Контейнер game-container не найден!');
+        return;
+      }
+      
+      // Создаем игровые объекты
+      this.background = new Background(this.app);
+      this.player = new Player(this.app);
+      
+      // Обработка клика/тапа для прыжка
+      this.app.canvas.addEventListener('click', () => this.handleJump());
+      this.app.canvas.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        this.handleJump();
+      });
+      
+      // Запускаем игровой цикл
+      this.start();
+      console.log('Игра запущена');
+    } catch (error) {
+      console.error('Ошибка инициализации игры:', error);
     }
-    
-    // Создаем игровые объекты
-    this.background = new Background(this.app);
-    this.player = new Player(this.app);
-    
-    // Обработка клика/тапа для прыжка
-    this.app.view.addEventListener('click', () => this.handleJump());
-    this.app.view.addEventListener('touchstart', (e) => {
-      e.preventDefault();
-      this.handleJump();
-    });
-    
-    // Запускаем игровой цикл
-    this.start();
-    console.log('Игра запущена');
   }
   
   handleJump() {
