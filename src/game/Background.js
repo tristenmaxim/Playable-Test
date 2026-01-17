@@ -89,11 +89,9 @@ export class Background {
 
     this.container.addChild(bgSprite);
 
-    // Для зеркальной секции элементы должны быть в том же диапазоне, что и фон
-    // Фон находится на offsetX + sectionWidth, элементы тоже должны быть там
-    const elementOffsetX = isMirrored ? offsetX + this.sectionWidth : offsetX;
-
     // Добавляем деревья на эту секцию
+    // Для зеркальной секции используем тот же offsetX, что и для фона
+    const elementOffsetX = isMirrored ? offsetX + this.sectionWidth : offsetX;
     const treesAdded = this.addTreesToSection(elementOffsetX, scale, isMirrored);
 
     // Добавляем кусты и фонари на эту секцию
@@ -120,10 +118,11 @@ export class Background {
       if (mirrored) {
         // Зеркальная секция - отражаем дерево и позицию
         sprite.scale.set(-treeScale, treeScale);
-        // Отражаем позицию относительно начала секции (offsetX уже учитывает смещение)
-        // Если обычная позиция x от начала секции, то зеркальная = sectionWidth - x
+        // offsetX уже равен offsetX + sectionWidth для зеркальной секции
+        // Отражаем позицию: если обычная позиция x, то зеркальная = sectionWidth - x
+        // Но offsetX уже смещен на sectionWidth, поэтому просто вычитаем x
         const mirroredX = this.sectionWidth - (x * bgScale);
-        sprite.position.set(offsetX + mirroredX, groundY);
+        sprite.position.set(offsetX - mirroredX, groundY);
       } else {
         sprite.scale.set(treeScale, treeScale);
         sprite.position.set(offsetX + x * bgScale, groundY);
@@ -158,7 +157,7 @@ export class Background {
         // Зеркальная секция - отражаем куст и позицию
         sprite.scale.set(-bushScale, bushScale);
         const mirroredX = this.sectionWidth - (x * bgScale);
-        sprite.position.set(offsetX + mirroredX, bushY);
+        sprite.position.set(offsetX - mirroredX, bushY);
       } else {
         sprite.scale.set(bushScale, bushScale);
         sprite.position.set(offsetX + x * bgScale, bushY);
@@ -180,7 +179,7 @@ export class Background {
         // Зеркальная секция - отражаем фонарь и позицию
         sprite.scale.set(-lampScale, lampScale);
         const mirroredX = this.sectionWidth - (x * bgScale);
-        sprite.position.set(offsetX + mirroredX, lampY);
+        sprite.position.set(offsetX - mirroredX, lampY);
       } else {
         sprite.scale.set(lampScale, lampScale);
         sprite.position.set(offsetX + x * bgScale, lampY);
