@@ -23,8 +23,11 @@ export class Game {
     console.log('Инициализация игры...');
     
     try {
-      // Инициализация PixiJS (в v8 это асинхронная операция)
-      this.app = await PIXI.Application.create({
+      // Инициализация PixiJS v8
+      // В v8 нужно использовать new Application() и дождаться готовности через init()
+      this.app = new PIXI.Application();
+      
+      await this.app.init({
         width: CONFIG.GAME_WIDTH,
         height: CONFIG.GAME_HEIGHT,
         backgroundColor: 0x1a1a2e,
@@ -38,7 +41,7 @@ export class Game {
       // Добавляем canvas в DOM
       const container = document.getElementById('game-container');
       if (container) {
-        // В PixiJS v8 используется app.canvas вместо app.view
+        // В PixiJS v8 используется app.canvas
         container.appendChild(this.app.canvas);
         console.log('Canvas добавлен в DOM');
       } else {
