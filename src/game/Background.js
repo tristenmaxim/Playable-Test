@@ -89,9 +89,13 @@ export class Background {
    * Устанавливает текстуру фона
    */
   setTexture(texture) {
-    // Удаляем старые слои
+    console.log('setTexture вызван, texture:', texture);
+    console.log('Размер текстуры:', texture.width, 'x', texture.height);
+    
+    // Удаляем старые слои (включая placeholder)
     this.layers.forEach(layer => {
       if (layer.sprite && layer.sprite.parent) {
+        console.log('Удаляем старый слой:', layer.sprite);
         layer.sprite.parent.removeChild(layer.sprite);
       }
     });
@@ -112,23 +116,43 @@ export class Background {
       scaleY = scaleX;
     }
     
+    console.log('Масштаб:', scaleX, 'x', scaleY);
+    
     // Создаем новые слои с текстурой
     const bg1 = new PIXI.Sprite(texture);
     bg1.scale.set(scaleX, scaleY);
     bg1.x = 0;
     bg1.y = 0;
     
+    console.log('bg1 создан, размер после масштабирования:', bg1.width, 'x', bg1.height);
+    console.log('bg1 позиция:', bg1.x, bg1.y);
+    
     const bg2 = new PIXI.Sprite(texture);
     bg2.scale.set(scaleX, scaleY);
     bg2.x = bg1.width; // Размещаем второй фон сразу после первого
     bg2.y = 0;
     
-    // Добавляем на сцену в самом начале (фон должен быть сзади)
-    this.app.stage.addChildAt(bg1, 0);
-    this.app.stage.addChildAt(bg2, 1);
+    console.log('bg2 создан, позиция:', bg2.x, bg2.y);
+    console.log('Количество детей на сцене до добавления:', this.app.stage.children.length);
+    
+    // Очищаем сцену от всех старых элементов
+    this.app.stage.removeChildren();
+    
+    // Добавляем новые спрайты
+    this.app.stage.addChild(bg1);
+    this.app.stage.addChild(bg2);
+    
+    console.log('Спрайты добавлены на сцену');
+    console.log('Количество детей на сцене после добавления:', this.app.stage.children.length);
+    console.log('bg1 видимый:', bg1.visible, 'alpha:', bg1.alpha);
+    console.log('bg2 видимый:', bg2.visible, 'alpha:', bg2.alpha);
     
     this.layers.push({ sprite: bg1, speed: this.speed });
     this.layers.push({ sprite: bg2, speed: this.speed });
+    
+    // Принудительно обновляем рендер
+    this.app.render();
+    console.log('Рендер обновлен');
   }
   
   update(delta) {
