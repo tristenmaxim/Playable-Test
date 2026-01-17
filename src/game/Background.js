@@ -33,27 +33,64 @@ export class Background {
     
     try {
       // В PixiJS v8 используем Assets API для загрузки
-      const texture = await PIXI.Assets.load(imagePath);
+      const loadedAsset = await PIXI.Assets.load(imagePath);
+      console.log('Загруженный ассет:', loadedAsset);
+      console.log('Тип ассета:', loadedAsset?.constructor?.name);
+      
+      // Assets.load может вернуть Texture или ImageResource
+      let texture;
+      if (loadedAsset instanceof PIXI.Texture) {
+        texture = loadedAsset;
+      } else if (loadedAsset?.texture) {
+        texture = loadedAsset.texture;
+      } else if (loadedAsset?.baseTexture) {
+        texture = new PIXI.Texture(loadedAsset.baseTexture);
+      } else {
+        // Пробуем создать текстуру из загруженного ресурса
+        texture = PIXI.Texture.from(imagePath);
+        console.log('Используем Texture.from() как fallback');
+      }
       
       if (texture) {
-        console.log('✅ Текстура загружена успешно! Размер:', texture.width, 'x', texture.height);
+        console.log('✅ Текстура получена! Размер:', texture.width, 'x', texture.height);
+        console.log('Текстура валидна:', texture.valid);
+        console.log('BaseTexture валиден:', texture.baseTexture?.valid);
+        
+        // Ждем, пока текстура точно загрузится
+        if (!texture.baseTexture?.valid) {
+          console.log('Ожидание загрузки baseTexture...');
+          await new Promise((resolve) => {
+            texture.baseTexture.on('loaded', resolve);
+            texture.baseTexture.on('error', resolve);
+            // Таймаут на случай, если событие уже произошло
+            setTimeout(resolve, 100);
+          });
+        }
+        
         this.setTexture(texture);
       } else {
-        console.warn('⚠️ Текстура не загружена, используется placeholder');
+        console.warn('⚠️ Не удалось получить текстуру из загруженного ассета');
       }
     } catch (error) {
       console.error('❌ Ошибка загрузки текстуры фона:', error);
       console.error('Путь:', imagePath);
-      console.warn('Используется placeholder');
+      console.warn('Пробуем Texture.from()...');
       
-      // Fallback: пробуем старый способ
+      // Fallback: используем Texture.from()
       try {
         const texture = PIXI.Texture.from(imagePath);
-        if (texture && texture.source) {
-          // В v8 структура может быть другой
-          texture.source.on('loaded', () => {
-            console.log('✅ Текстура загружена через fallback!');
+        console.log('Texture.from() создан, валиден:', texture.baseTexture?.valid);
+        
+        if (texture.baseTexture?.valid) {
+          this.setTexture(texture);
+        } else {
+          texture.baseTexture.on('loaded', () => {
+            console.log('✅ Текстура загружена через Texture.from()!');
             this.setTexture(texture);
+          });
+          
+          texture.baseTexture.on('error', (err) => {
+            console.error('Ошибка загрузки через Texture.from():', err);
           });
         }
       } catch (fallbackError) {
