@@ -131,7 +131,7 @@ export class Background {
     // Фонари - средний план, на той же высоте что и деревья
     const lampY = CONFIG.GAME_HEIGHT * 0.54;
     const lampPositions = [200, 600, 1000, 1400];
-    const lampScale = 0.55;
+    const lampScale = 0.55 * 1.5; // Увеличиваем в полтора раза
 
     lampPositions.forEach((x) => {
       const sprite = new PIXI.Sprite(this.textures.streetlamp);
@@ -154,7 +154,7 @@ export class Background {
     // Кусты - ближе всего, на той же высоте что и остальные элементы
     const bushY = CONFIG.GAME_HEIGHT * 0.54;
     const bushPositions = [50, 200, 350, 500, 650, 800, 950, 1100, 1250, 1400];
-    const bushScale = 0.45;
+    const bushScale = 0.45 / 1.5; // Уменьшаем в полтора раза
 
     bushPositions.forEach((x, i) => {
       const texture = this.textures.bushes[i % this.textures.bushes.length];
