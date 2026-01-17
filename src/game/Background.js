@@ -42,11 +42,11 @@ export class Background {
         bg: bgTexture
       };
 
-      // Создаем фон (4 секции: оригинал - зеркально - зеркально - оригинал)
+      // Создаем фон (4 секции: оригинал - зеркально - оригинал - зеркально)
       this.createBackgroundSection(0); // оригинал
       this.createBackgroundSection(1); // зеркально
-      this.createBackgroundSection(2); // зеркально
-      this.createBackgroundSection(3); // оригинал
+      this.createBackgroundSection(2); // оригинал
+      this.createBackgroundSection(3); // зеркально
 
       this.isReady = true;
       console.log('✅ Фон готов');
@@ -62,8 +62,8 @@ export class Background {
     this.sectionWidth = this.textures.bg.width * scale;
 
     const offsetX = index * this.sectionWidth;
-    // Паттерн: 0-оригинал, 1-зеркально, 2-зеркально, 3-оригинал
-    const isMirrored = index === 1 || index === 2;
+    // Паттерн: 0-оригинал, 1-зеркально, 2-оригинал, 3-зеркально
+    const isMirrored = index === 1 || index === 3;
 
     // Создаем фон - чётные секции обычные, нечётные зеркальные
     const bgSprite = new PIXI.Sprite(this.textures.bg);
@@ -90,8 +90,8 @@ export class Background {
     // Двигаем весь контейнер
     this.container.position.x -= this.speed * delta;
 
-    // Когда первая секция полностью ушла влево, сбрасываем позицию
-    // У нас 4 секции, поэтому сбрасываем когда ушла одна секция
+    // Когда первая секция полностью ушла влево, сбрасываем позицию на одну секцию
+    // Это создает бесшовное зацикливание
     if (this.container.position.x <= -this.sectionWidth) {
       this.container.position.x += this.sectionWidth;
     }
