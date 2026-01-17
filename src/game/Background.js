@@ -118,9 +118,9 @@ export class Background {
       if (mirrored) {
         // Зеркальная секция - отражаем дерево и позицию
         sprite.scale.set(-treeScale, treeScale);
-        // offsetX уже равен offsetX + sectionWidth для зеркальной секции
-        // Отражаем позицию: если обычная позиция x, то зеркальная = sectionWidth - x
-        // Но offsetX уже смещен на sectionWidth, поэтому просто вычитаем x
+        // offsetX для зеркальной секции = offsetX + sectionWidth (где offsetX = sectionWidth для секции 1)
+        // Отражаем позицию: если обычная позиция x от начала секции, то зеркальная = sectionWidth - x
+        // Но offsetX уже смещен, поэтому: позиция = offsetX - (sectionWidth - x*bgScale) = offsetX - sectionWidth + x*bgScale
         const mirroredX = this.sectionWidth - (x * bgScale);
         sprite.position.set(offsetX - mirroredX, groundY);
       } else {
