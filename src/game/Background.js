@@ -135,17 +135,26 @@ export class Background {
     console.log('bg2 создан, позиция:', bg2.x, bg2.y);
     console.log('Количество детей на сцене до добавления:', this.app.stage.children.length);
     
-    // Очищаем сцену от всех старых элементов
-    this.app.stage.removeChildren();
+    // НЕ очищаем всю сцену - там может быть Player!
+    // Удаляем только старые слои фона
+    this.layers.forEach(layer => {
+      if (layer.sprite && layer.sprite.parent) {
+        layer.sprite.parent.removeChild(layer.sprite);
+      }
+    });
     
-    // Добавляем новые спрайты
-    this.app.stage.addChild(bg1);
-    this.app.stage.addChild(bg2);
+    // Добавляем новые спрайты в начало (фон должен быть сзади)
+    this.app.stage.addChildAt(bg1, 0);
+    
+    // Находим индекс для второго спрайта (после первого, но перед Player)
+    const bg1Index = this.app.stage.getChildIndex(bg1);
+    this.app.stage.addChildAt(bg2, bg1Index + 1);
     
     console.log('Спрайты добавлены на сцену');
     console.log('Количество детей на сцене после добавления:', this.app.stage.children.length);
-    console.log('bg1 видимый:', bg1.visible, 'alpha:', bg1.alpha);
-    console.log('bg2 видимый:', bg2.visible, 'alpha:', bg2.alpha);
+    console.log('bg1 видимый:', bg1.visible, 'alpha:', bg1.alpha, 'zIndex:', this.app.stage.getChildIndex(bg1));
+    console.log('bg2 видимый:', bg2.visible, 'alpha:', bg2.alpha, 'zIndex:', this.app.stage.getChildIndex(bg2));
+    console.log('Все дети на сцене:', this.app.stage.children.map(c => c.constructor.name));
     
     this.layers.push({ sprite: bg1, speed: this.speed });
     this.layers.push({ sprite: bg2, speed: this.speed });
