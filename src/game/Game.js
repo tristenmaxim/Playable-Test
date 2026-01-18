@@ -90,8 +90,8 @@ export class Game {
     // В PixiJS v8 ticker передает объект Ticker, а не delta напрямую
     const delta = ticker.deltaTime;
 
-    // Обновляем фон
-    if (this.background) {
+    // Обновляем фон только когда игрок бежит
+    if (this.background && this.player && this.player.gameStarted) {
       this.background.update(delta);
     }
 
